@@ -53,10 +53,11 @@ To build the fastest, most frictionless B2B screen-sharing utility on the web. *
 1.  **Initialization:** Host loads PWA -> Connects to PeerJS server -> Receives unique Host ID.
 2.  **Media Acquisition:** Host selects mode -> Awaits `getDisplayMedia` -> Optionally awaits `getUserMedia` for mic/cam -> Maps to global `MediaStream` objects.
 3.  **Link Generation:** Host ID is appended to the URL (`?room=HOST_ID`). QR code and Deep Links are populated.
-4.  **Viewer Connection:** Viewer loads URL -> Parses `?room=` parameter -> Calls Host via PeerJS.
-5.  **Multi-Stream Handling (PiP):** 
-    * Viewer initiates a call with metadata `type: 'main'`. Host answers with Screen+Mic stream.
-    * Viewer initiates a second call with metadata `type: 'pip'`. Host answers with WebCam stream.
+4.  **Viewer Connection:** Viewer loads URL -> Parses `?room=` parameter -> Calls Host via PeerJS.5.  **Multi-Stream Handling (PiP):** 
+    *   Viewer opens a data connection carrying `metadata: { role: 'viewer' }`. That connection is the presence channel: it tells the host who is watching.
+    *   Host calls the viewer's peer with the Screen+Mic stream, `metadata: { type: 'main' }`. Viewer answers with no stream of its own.
+    *   Host places a second call with the WebCam stream, `metadata: { type: 'pip' }`. Viewer answers it the same way.
+    *   **Note (built instead of the original viewer-initiated calls):** the caller's offer decides the media sections, so a viewer that calls with nothing to send produces an offer with no tracks and the host's screen can never be attached to it. Calling from the host also keeps viewers from uploading anything, which matters on mobile data. Same one-way result, honest framing.
 6.  **Teardown:** Native browser "Stop Sharing" bar triggers `onended` track event -> Cleans up all PeerJS calls and media tracks.
 
 ### 2.3 Critical Technical Constraints
@@ -70,8 +71,8 @@ To build the fastest, most frictionless B2B screen-sharing utility on the web. *
 
 ### Phase 1: Core Scaffolding
 - [x] Set up single-file HTML structure (HTML/CSS/JS).
-- [ ] Split into `index.html`, `style.css`, and `app.js` for production scaling.
-- [ ] Add `manifest.json`, standard favicons, and `sw.js` for PWA installation capability.
+- [x] Split into `index.html`, `style.css`, and `app.js` for production scaling.
+- [x] Add `manifest.json`, standard favicons, and `sw.js` for PWA installation capability.
 
 ### Phase 2: Media Pipeline
 - [x] Implement Screen + Mic acquisition via `getDisplayMedia`.
